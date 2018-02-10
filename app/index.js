@@ -2,22 +2,22 @@ import express from 'express';
 import mongoose from 'mongoose';
 import bodyParser from 'body-parser';
 import cors from 'cors';
-import config from './config';
-import routes from './routes';
 import redis from 'redis';
 import bluebird from 'bluebird';
+import config from './config';
+import routes from './routes';
 
 const app = express();
 
 app.enable('trust proxy');
 app.disable('x-powered-by');
 app.disable('etag');
-app.use(cors({allowedHeaders: ['Authorization', 'Content-Type']}));
+app.use(cors({ allowedHeaders: ['Authorization', 'Content-Type'] }));
 app.use(bodyParser.urlencoded({ extended: false }));
-app.use(bodyParser.json())
+app.use(bodyParser.json());
 app.use((req, res, next) => {
-  res.header("Access-Control-Allow-Origin", "*");
-  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
   next();
 });
 
@@ -31,7 +31,7 @@ mongoose.Promise = bluebird;
 bluebird.promisifyAll(redis.RedisClient.prototype);
 bluebird.promisifyAll(redis.Multi.prototype);
 
-global.redis_client = redis.createClient(process.env.REDIS_URL); //creates a new client
+global.redis_client = redis.createClient(process.env.REDIS_URL); // creates a new client
 
 app.use('/api', routes);
 app.use('/', routes);
@@ -39,7 +39,7 @@ app.use('/', routes);
 // Basic error handler
 app.use((err, _req, res, _next) => {
   if (res.headersSent) {
-    logging.error('failed view step with', err.viewErr, err.stack);
+    console.error('failed view step with', err.viewErr, err.stack);
   } else {
     if (err.output && err.output.statusCode) {
       return res
@@ -52,14 +52,15 @@ app.use((err, _req, res, _next) => {
         .set('Content-Type', 'text/plain')
         .send(err.errors[0].messages[0]);
     }
-    logging.error(err.stack);
+    console.error(err.stack);
+
     return res.sendStatus(500);
   }
 });
 
-let port = process.env.PORT || config.port;
+const PORT = process.env.PORT || config.port;
 
-app.listen(port, () => {
+app.listen(PORT, () => {
   console.log(`App listening on port ${PORT}`);
 });
 
